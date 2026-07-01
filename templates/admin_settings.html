@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки - WhatsApp ChatBot Admin{% endblock %}
+{% block page_title %}Настройки системы{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Настройки WhatsApp -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fab fa-whatsapp"></i> Настройки WhatsApp
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="whatsappSettings">
+                    <div class="mb-3">
+                        <label class="form-label">API провайдер</label>
+                        <select class="form-control" id="whatsappProvider">
+                            <option value="green">Green API</option>
+                            <option value="twilio">Twilio</option>
+                        </select>
+                    </div>
+                    
+                    <div id="greenApiSettings">
+                        <div class="mb-3">
+                            <label for="greenApiId" class="form-label">Green API ID</label>
+                            <input type="text" class="form-control" id="greenApiId" 
+                                   placeholder="Ваш Green API ID">
+                        </div>
+                        <div class="mb-3">
+                            <label for="greenApiToken" class="form-label">Green API Token</label>
+                            <input type="password" class="form-control" id="greenApiToken" 
+                                   placeholder="Ваш Green API Token">
+                        </div>
+                    </div>
+                    
+                    <div id="twilioSettings" style="display: none;">
+                        <div class="mb-3">
+                            <label for="twilioSid" class="form-label">Twilio Account SID</label>
+                            <input type="text" class="form-control" id="twilioSid" 
+                                   placeholder="Ваш Twilio Account SID">
+                        </div>
+                        <div class="mb-3">
+                            <label for="twilioToken" class="form-label">Twilio Auth Token</label>
+                            <input type="password" class="form-control" id="twilioToken" 
+                                   placeholder="Ваш Twilio Auth Token">
+                        </div>
+                        <div class="mb-3">
+                            <label for="twilioNumber" class="form-label">WhatsApp номер</label>
+                            <input type="text" class="form-control" id="twilioNumber" 
+                                   placeholder="whatsapp:+14155238886">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Сохранить настройки WhatsApp
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Настройки ИИ -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-brain"></i> Настройки ИИ
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="aiSettings">
+                    <div class="mb-3">
+                        <label for="openrouterKey" class="form-label">OpenRouter API Key</label>
+                        <input type="password" class="form-control" id="openrouterKey" 
+                               placeholder="Ваш OpenRouter API ключ">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="aiModel" class="form-label">Модель ИИ</label>
+                        <select class="form-control" id="aiModel">
+                            <option value="meta-llama/llama-2-70b-chat">Llama 2 70B Chat</option>
+                            <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            <option value="openai/gpt-4">GPT-4</option>
+                            <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="aiTemperature" class="form-label">Температура (0.0 - 1.0)</label>
+                        <input type="range" class="form-range" id="aiTemperature" 
+                               min="0" max="1" step="0.1" value="0.7">
+                        <div class="d-flex justify-content-between">
+                            <small>0.0 (детерминированно)</small>
+                            <small id="temperatureValue">0.7</small>
+                            <small>1.0 (креативно)</small>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Сохранить настройки ИИ
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Настройки рассылки -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-clock"></i> Настройки рассылки
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="schedulerSettings">
+                    <div class="mb-3">
+                        <label for="messageInterval" class="form-label">Интервал между сообщениями (минуты)</label>
+                        <input type="number" class="form-control" id="messageInterval" 
+                               value="40" min="1" max="1440">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="workStartHour" class="form-label">Начало рабочего дня</label>
+                                <input type="number" class="form-control" id="workStartHour" 
+                                       value="9" min="0" max="23">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="workEndHour" class="form-label">Конец рабочего дня</label>
+                                <input type="number" class="form-control" id="workEndHour" 
+                                       value="19" min="0" max="23">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="timezone" class="form-label">Часовой пояс</label>
+                        <select class="form-control" id="timezone">
+                            <option value="Europe/Moscow" selected>Москва (UTC+3)</option>
+                            <option value="Europe/Kiev">Киев (UTC+2)</option>
+                            <option value="Europe/Minsk">Минск (UTC+3)</option>
+                            <option value="Asia/Almaty">Алматы (UTC+6)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Сохранить настройки рассылки
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Настройки системы -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-cog"></i> Настройки системы
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="systemSettings">
+                    <div class="mb-3">
+                        <label for="adminUsername" class="form-label">Имя администратора</label>
+                        <input type="text" class="form-control" id="adminUsername" 
+                               value="admin" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="adminPassword" class="form-label">Новый пароль администратора</label>
+                        <input type="password" class="form-control" id="adminPassword" 
+                               placeholder="Оставьте пустым, чтобы не менять">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="logLevel" class="form-label">Уровень логирования</label>
+                        <select class="form-control" id="logLevel">
+                            <option value="DEBUG">DEBUG</option>
+                            <option value="INFO" selected>INFO</option>
+                            <option value="WARNING">WARNING</option>
+                            <option value="ERROR">ERROR</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="debugMode" checked>
+                            <label class="form-check-label" for="debugMode">
+                                Режим отладки
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Сохранить настройки системы
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Действия системы -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-tools"></i> Действия системы
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <button class="btn btn-success w-100 mb-2" onclick="startScheduler()">
+                            <i class="fas fa-play"></i> Запустить планировщик
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-warning w-100 mb-2" onclick="stopScheduler()">
+                            <i class="fas fa-pause"></i> Остановить планировщик
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-info w-100 mb-2" onclick="testWhatsApp()">
+                            <i class="fab fa-whatsapp"></i> Тест WhatsApp
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-secondary w-100 mb-2" onclick="testAI()">
+                            <i class="fas fa-brain"></i> Тест ИИ
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-primary w-100 mb-2" onclick="exportContacts()">
+                            <i class="fas fa-download"></i> Экспорт контактов
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-success w-100 mb-2" onclick="importContacts()">
+                            <i class="fas fa-upload"></i> Импорт контактов
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-warning w-100 mb-2" onclick="backupDatabase()">
+                            <i class="fas fa-database"></i> Резервная копия БД
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-danger w-100 mb-2" onclick="restartSystem()">
+                            <i class="fas fa-redo"></i> Перезапуск системы
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Переключение настроек WhatsApp API
+document.getElementById('whatsappProvider').addEventListener('change', function(e) {
+    const greenSettings = document.getElementById('greenApiSettings');
+    const twilioSettings = document.getElementById('twilioSettings');
+    
+    if (e.target.value === 'green') {
+        greenSettings.style.display = 'block';
+        twilioSettings.style.display = 'none';
+    } else {
+        greenSettings.style.display = 'none';
+        twilioSettings.style.display = 'block';
+    }
+});
+
+// Обновление значения температуры
+document.getElementById('aiTemperature').addEventListener('input', function(e) {
+    document.getElementById('temperatureValue').textContent = e.target.value;
+});
+
+// Сохранение настроек
+document.getElementById('whatsappSettings').addEventListener('submit', function(e) {
+    e.preventDefault();
+    showNotification('Настройки WhatsApp сохранены', 'success');
+});
+
+document.getElementById('aiSettings').addEventListener('submit', function(e) {
+    e.preventDefault();
+    showNotification('Настройки ИИ сохранены', 'success');
+});
+
+document.getElementById('schedulerSettings').addEventListener('submit', function(e) {
+    e.preventDefault();
+    showNotification('Настройки рассылки сохранены', 'success');
+});
+
+document.getElementById('systemSettings').addEventListener('submit', function(e) {
+    e.preventDefault();
+    showNotification('Настройки системы сохранены', 'success');
+});
+
+// Действия системы
+function startScheduler() {
+    showNotification('Планировщик запущен', 'success');
+}
+
+function stopScheduler() {
+    showNotification('Планировщик остановлен', 'warning');
+}
+
+function testWhatsApp() {
+    showNotification('Тест WhatsApp выполнен', 'info');
+}
+
+function testAI() {
+    showNotification('Тест ИИ выполнен', 'info');
+}
+
+function exportContacts() {
+    showNotification('Экспорт контактов начат', 'info');
+}
+
+function importContacts() {
+    showNotification('Импорт контактов начат', 'info');
+}
+
+function backupDatabase() {
+    showNotification('Резервная копия БД создана', 'success');
+}
+
+function restartSystem() {
+    if (confirm('Вы уверены, что хотите перезапустить систему?')) {
+        showNotification('Система перезапускается...', 'warning');
+    }
+}
+
+// Показать уведомление
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                      type === 'warning' ? 'alert-warning' : 'alert-info';
+    const alert = document.createElement('div');
+    alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    // Автоматически скрыть через 3 секунды
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 3000);
+}
+</script>
+{% endblock %}

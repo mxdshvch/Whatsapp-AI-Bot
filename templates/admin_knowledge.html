@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}База знаний - WhatsApp ChatBot Admin{% endblock %}
+{% block page_title %}База знаний{% endblock %}
+
+{% block content %}
+<!-- Добавление новой записи -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Добавить новую запись</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/admin/knowledge">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="question" class="form-label">Вопрос</label>
+                                <input type="text" class="form-control" id="question" name="question" 
+                                       placeholder="Какой вопрос может задать предприниматель?" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Категория</label>
+                                <select class="form-control" id="category" name="category">
+                                    <option value="">Выберите категорию</option>
+                                    <option value="services">Услуги</option>
+                                    <option value="pricing">Цены</option>
+                                    <option value="integration">Интеграция</option>
+                                    <option value="support">Поддержка</option>
+                                    <option value="general">Общие вопросы</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="answer" class="form-label">Ответ</label>
+                        <textarea class="form-control" id="answer" name="answer" rows="4" 
+                                  placeholder="Подробный ответ на вопрос..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="keywords" class="form-label">Ключевые слова (через запятую)</label>
+                        <input type="text" class="form-control" id="keywords" name="keywords" 
+                               placeholder="автоматизация, чат-бот, ИИ, продажи">
+                        <div class="form-text">Ключевые слова помогут ИИ найти подходящий ответ</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Добавить запись
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Список записей -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Записи базы знаний ({{ total }})</h6>
+                <div>
+                    <span class="badge bg-success">{{ knowledge_items|selectattr('is_active')|list|length }} активных</span>
+                    <span class="badge bg-secondary">{{ knowledge_items|rejectattr('is_active')|list|length }} неактивных</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Вопрос</th>
+                                <th>Ответ</th>
+                                <th>Категория</th>
+                                <th>Ключевые слова</th>
+                                <th>Статус</th>
+                                <th>Создано</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in knowledge_items %}
+                            <tr>
+                                <td>{{ item.id }}</td>
+                                <td>
+                                    <strong>{{ item.question }}</strong>
+                                </td>
+                                <td>
+                                    <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
+                                        {{ item.answer }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if item.category %}
+                                        <span class="badge bg-info">{{ item.category }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.keywords %}
+                                        <small class="text-muted">{{ item.keywords[:50] }}{% if item.keywords|length > 50 %}...{% endif %}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.is_active %}
+                                        <span class="badge bg-success">Активна</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Неактивна</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editItem({{ item.id }})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-{% if item.is_active %}warning{% else %}success{% endif %}" 
+                                            onclick="toggleStatus({{ item.id }}, {{ item.is_active|lower }})">
+                                        <i class="fas fa-{% if item.is_active %}pause{% else %}play{% endif %}"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Пагинация -->
+{% if total_pages > 1 %}
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page - 1 }}">Предыдущая</a>
+        </li>
+        {% endif %}
+        
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        
+        {% if page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page + 1 }}">Следующая</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Редактирование записи
+function editItem(itemId) {
+    // Здесь можно добавить модальное окно для редактирования
+    console.log('Редактирование записи:', itemId);
+    showNotification('Функция редактирования в разработке', 'info');
+}
+
+// Переключение статуса
+function toggleStatus(itemId, isActive) {
+    const newStatus = !isActive;
+    const action = newStatus ? 'активировать' : 'деактивировать';
+    
+    if (confirm(`Вы уверены, что хотите ${action} эту запись?`)) {
+        // Здесь можно добавить AJAX запрос
+        console.log('Изменение статуса записи:', itemId, 'на', newStatus);
+        showNotification(`Запись ${newStatus ? 'активирована' : 'деактивирована'}`, 'success');
+        
+        // Перезагрузить страницу через 1 секунду
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    }
+}
+
+// Показать уведомление
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-info';
+    const alert = document.createElement('div');
+    alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    // Автоматически скрыть через 3 секунды
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 3000);
+}
+
+// Автозаполнение ключевых слов на основе вопроса
+document.getElementById('question').addEventListener('input', function(e) {
+    const question = e.target.value.toLowerCase();
+    const keywordsInput = document.getElementById('keywords');
+    
+    // Простое извлечение ключевых слов
+    const commonWords = ['что', 'как', 'где', 'когда', 'почему', 'зачем', 'можно', 'ли', 'есть', 'у', 'вас', 'стоимость', 'цена', 'сколько'];
+    const words = question.split(' ').filter(word => 
+        word.length > 3 && !commonWords.includes(word)
+    );
+    
+    if (words.length > 0 && !keywordsInput.value) {
+        keywordsInput.value = words.slice(0, 5).join(', ');
+    }
+});
+</script>
+{% endblock %}

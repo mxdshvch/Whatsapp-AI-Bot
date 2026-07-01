@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Контакт {{ contact.phone_number }} - WhatsApp ChatBot Admin{% endblock %}
+{% block page_title %}Контакт: {{ contact.phone_number }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Информация о контакте -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Информация о контакте</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Телефон:</strong><br>
+                    <i class="fab fa-whatsapp text-success"></i>
+                    {{ contact.phone_number }}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Имя:</strong><br>
+                    {{ contact.name or 'Не указано' }}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Статус:</strong><br>
+                    {% if contact.status == 'new' %}
+                        <span class="badge bg-secondary">Новый</span>
+                    {% elif contact.status == 'contacted' %}
+                        <span class="badge bg-primary">Связались</span>
+                    {% elif contact.status == 'responded' %}
+                        <span class="badge bg-success">Отвечает</span>
+                    {% elif contact.status == 'converted' %}
+                        <span class="badge bg-warning">Конвертирован</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Последнее сообщение:</strong><br>
+                    {% if contact.last_message_sent %}
+                        {{ contact.last_message_sent.strftime('%d.%m.%Y %H:%M') }}
+                    {% else %}
+                        <span class="text-muted">Не отправляли</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Создан:</strong><br>
+                    {{ contact.created_at.strftime('%d.%m.%Y %H:%M') }}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Обновлен:</strong><br>
+                    {{ contact.updated_at.strftime('%d.%m.%Y %H:%M') }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Быстрые действия -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Быстрые действия</h6>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-success btn-sm w-100 mb-2" onclick="sendTestMessage()">
+                    <i class="fas fa-paper-plane"></i> Отправить тестовое сообщение
+                </button>
+                <button class="btn btn-warning btn-sm w-100 mb-2" onclick="changeStatus('responded')">
+                    <i class="fas fa-edit"></i> Отметить как отвечающего
+                </button>
+                <button class="btn btn-info btn-sm w-100" onclick="changeStatus('converted')">
+                    <i class="fas fa-check"></i> Отметить как конвертированного
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- История сообщений -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">История сообщений</h6>
+            </div>
+            <div class="card-body">
+                <div class="chat-container" style="height: 500px; overflow-y: auto; border: 1px solid #dee2e6; padding: 15px; border-radius: 5px;">
+                    {% for message in messages %}
+                    <div class="message mb-3 {% if message.direction == 'outgoing' %}text-end{% else %}text-start{% endif %}">
+                        <div class="d-inline-block p-3 rounded {% if message.direction == 'outgoing' %}bg-primary text-white{% else %}bg-light{% endif %}" style="max-width: 70%;">
+                            <div class="message-content">{{ message.content }}</div>
+                            <div class="message-meta mt-2" style="font-size: 0.8em; opacity: 0.7;">
+                                {{ message.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                {% if message.direction == 'outgoing' %}
+                                    <span class="badge bg-light text-dark ms-2">{{ message.status }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if not messages %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-comments fa-3x mb-3"></i>
+                        <p>Сообщений пока нет</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Отправка нового сообщения -->
+                <div class="mt-3">
+                    <form id="sendMessageForm">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newMessage" placeholder="Введите сообщение...">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-paper-plane"></i> Отправить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Отправка сообщения
+document.getElementById('sendMessageForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const message = document.getElementById('newMessage').value;
+    if (!message.trim()) return;
+    
+    // Здесь можно добавить AJAX запрос для отправки сообщения
+    console.log('Отправка сообщения:', message);
+    
+    // Очистить поле
+    document.getElementById('newMessage').value = '';
+    
+    // Показать уведомление
+    showNotification('Сообщение отправлено', 'success');
+});
+
+// Отправка тестового сообщения
+function sendTestMessage() {
+    const testMessage = "Привет! Это тестовое сообщение от администратора.";
+    console.log('Отправка тестового сообщения:', testMessage);
+    showNotification('Тестовое сообщение отправлено', 'info');
+}
+
+// Изменение статуса
+function changeStatus(newStatus) {
+    console.log('Изменение статуса на:', newStatus);
+    showNotification('Статус изменен', 'success');
+}
+
+// Показать уведомление
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-info';
+    const alert = document.createElement('div');
+    alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    // Автоматически скрыть через 3 секунды
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 3000);
+}
+
+// Автопрокрутка к последнему сообщению
+document.addEventListener('DOMContentLoaded', function() {
+    const chatContainer = document.querySelector('.chat-container');
+    if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+});
+</script>
+{% endblock %}

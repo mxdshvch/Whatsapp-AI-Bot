@@ -1,0 +1,15 @@
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.env
+production.env
+*.db
+chatbot.db
+chatbot.log
+logs/
+*.log
+.DS_Store
+ssl/
+.idea/
+.vscode/

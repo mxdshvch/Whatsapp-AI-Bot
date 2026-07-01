@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Логи системы - WhatsApp ChatBot Admin{% endblock %}
+{% block page_title %}Логи системы{% endblock %}
+
+{% block content %}
+<!-- Фильтры -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="btn-group" role="group">
+            <a href="/admin/logs" class="btn btn-outline-primary {% if not current_level %}active{% endif %}">
+                Все уровни
+            </a>
+            <a href="/admin/logs?level=info" class="btn btn-outline-info {% if current_level == 'info' %}active{% endif %}">
+                <i class="fas fa-info-circle"></i> Info
+            </a>
+            <a href="/admin/logs?level=warning" class="btn btn-outline-warning {% if current_level == 'warning' %}active{% endif %}">
+                <i class="fas fa-exclamation-triangle"></i> Warning
+            </a>
+            <a href="/admin/logs?level=error" class="btn btn-outline-danger {% if current_level == 'error' %}active{% endif %}">
+                <i class="fas fa-times-circle"></i> Error
+            </a>
+        </div>
+    </div>
+    <div class="col-md-6 text-end">
+        <button class="btn btn-secondary btn-sm" onclick="refreshLogs()">
+            <i class="fas fa-sync-alt"></i> Обновить
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="clearLogs()">
+            <i class="fas fa-trash"></i> Очистить логи
+        </button>
+    </div>
+</div>
+
+<!-- Статистика логов -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Всего записей</div>
+                        <div class="h5 mb-0">{{ total }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Info</div>
+                        <div class="h5 mb-0">{{ logs|selectattr('level', 'equalto', 'info')|list|length }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-info-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Warning</div>
+                        <div class="h5 mb-0">{{ logs|selectattr('level', 'equalto', 'warning')|list|length }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">Error</div>
+                        <div class="h5 mb-0">{{ logs|selectattr('level', 'equalto', 'error')|list|length }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Таблица логов -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead>
+                    <tr>
+                        <th>Время</th>
+                        <th>Уровень</th>
+                        <th>Модуль</th>
+                        <th>Сообщение</th>
+                        <th>Данные</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr class="{% if log.level == 'error' %}table-danger{% elif log.level == 'warning' %}table-warning{% elif log.level == 'info' %}table-info{% endif %}">
+                        <td>
+                            <small>{{ log.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</small>
+                        </td>
+                        <td>
+                            {% if log.level == 'error' %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle"></i> Error
+                                </span>
+                            {% elif log.level == 'warning' %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> Warning
+                                </span>
+                            {% elif log.level == 'info' %}
+                                <span class="badge bg-info">
+                                    <i class="fas fa-info-circle"></i> Info
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ log.level }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if log.module %}
+                                <code>{{ log.module }}</code>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="max-width: 400px; word-wrap: break-word;">
+                                {{ log.message }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if log.data %}
+                                <button class="btn btn-sm btn-outline-secondary" 
+                                        onclick="showLogData({{ log.id }})" 
+                                        title="Показать дополнительные данные">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Пагинация -->
+{% if total_pages > 1 %}
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page - 1 }}{% if current_level %}&level={{ current_level }}{% endif %}">Предыдущая</a>
+        </li>
+        {% endif %}
+        
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}{% if current_level %}&level={{ current_level }}{% endif %}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        
+        {% if page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page + 1 }}{% if current_level %}&level={{ current_level }}{% endif %}">Следующая</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Модальное окно для показа данных лога -->
+<div class="modal fade" id="logDataModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Дополнительные данные лога</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="logDataContent" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Показать данные лога
+function showLogData(logId) {
+    // Здесь можно добавить AJAX запрос для получения данных лога
+    const sampleData = {
+        "contact_id": 123,
+        "phone_number": "+79123456789",
+        "message": "Привет! Интересует автоматизация",
+        "ai_response": "Здравствуйте! Мы занимаемся автоматизацией бизнес-процессов..."
+    };
+    
+    document.getElementById('logDataContent').textContent = JSON.stringify(sampleData, null, 2);
+    
+    const modal = new bootstrap.Modal(document.getElementById('logDataModal'));
+    modal.show();
+}
+
+// Обновить логи
+function refreshLogs() {
+    location.reload();
+}
+
+// Очистить логи
+function clearLogs() {
+    if (confirm('Вы уверены, что хотите очистить все логи? Это действие нельзя отменить.')) {
+        // Здесь можно добавить AJAX запрос для очистки логов
+        showNotification('Логи очищены', 'success');
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    }
+}
+
+// Показать уведомление
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-info';
+    const alert = document.createElement('div');
+    alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    // Автоматически скрыть через 3 секунды
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 3000);
+}
+
+// Автообновление логов каждые 30 секунд
+setInterval(() => {
+    // Проверяем, есть ли новые логи
+    console.log('Проверка новых логов...');
+}, 30000);
+</script>
+{% endblock %}

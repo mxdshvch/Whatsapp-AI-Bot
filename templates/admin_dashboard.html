@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Панель управления - WhatsApp ChatBot Admin{% endblock %}
+{% block page_title %}Панель управления{% endblock %}
+
+{% block content %}
+<!-- Статистика -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Всего контактов
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold">{{ stats.total_contacts }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card success h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Отвечают
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold">{{ stats.responded_contacts }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-comments fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card warning h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Сообщений сегодня
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold">{{ stats.messages_today }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-paper-plane fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card info h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Всего сообщений
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold">{{ stats.total_messages }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Графики -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Активность сообщений</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="messageChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Статусы контактов</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Последние сообщения -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Последние сообщения</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Время</th>
+                                <th>Контакт</th>
+                                <th>Направление</th>
+                                <th>Сообщение</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for message in recent_messages %}
+                            <tr>
+                                <td>{{ message.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                <td>{{ message.contact.phone_number }}</td>
+                                <td>
+                                    {% if message.direction == 'outgoing' %}
+                                        <span class="badge bg-primary">Исходящее</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Входящее</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ message.content[:50] }}{% if message.content|length > 50 %}...{% endif %}</td>
+                                <td>
+                                    {% if message.status == 'sent' %}
+                                        <span class="badge bg-success">Отправлено</span>
+                                    {% elif message.status == 'delivered' %}
+                                        <span class="badge bg-info">Доставлено</span>
+                                    {% elif message.status == 'read' %}
+                                        <span class="badge bg-warning">Прочитано</span>
+                                    {% elif message.status == 'failed' %}
+                                        <span class="badge bg-danger">Ошибка</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ message.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// График активности сообщений
+const messageCtx = document.getElementById('messageChart').getContext('2d');
+const messageChart = new Chart(messageCtx, {
+    type: 'line',
+    data: {
+        labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+        datasets: [{
+            label: 'Сообщения',
+            data: [12, 19, 3, 5, 2, 3, 8],
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// График статусов контактов
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Новые', 'Связались', 'Отвечают', 'Конвертированы'],
+        datasets: [{
+            data: [{{ stats.new_contacts }}, {{ stats.contacted_contacts }}, {{ stats.responded_contacts }}, 0],
+            backgroundColor: [
+                '#FF6384',
+                '#36A2EB',
+                '#FFCE56',
+                '#4BC0C0'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
