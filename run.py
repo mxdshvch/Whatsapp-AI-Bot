@@ -95,24 +95,14 @@ def init_database():
         print(f"❌ Ошибка инициализации базы данных: {e}")
         return False
 
-def init_knowledge_base():
-    """Инициализация базы знаний"""
+def init_knowledge_base_step():
+    """Проверка базы знаний"""
     try:
         from init_knowledge_base import init_knowledge_base
         init_knowledge_base()
         return True
     except Exception as e:
-        print(f"❌ Ошибка инициализации базы знаний: {e}")
-        return False
-
-def add_test_data():
-    """Добавление тестовых данных"""
-    try:
-        from add_test_contacts import add_test_contacts
-        add_test_contacts()
-        return True
-    except Exception as e:
-        print(f"❌ Ошибка добавления тестовых данных: {e}")
+        print(f"❌ Ошибка проверки базы знаний: {e}")
         return False
 
 def main():
@@ -139,15 +129,8 @@ def main():
         print("❌ Не удалось инициализировать базу данных")
         sys.exit(1)
     
-    # Инициализация базы знаний
-    if not init_knowledge_base():
-        print("❌ Не удалось инициализировать базу знаний")
-        sys.exit(1)
-    
-    # Добавление тестовых данных
-    if not add_test_data():
-        print("❌ Не удалось добавить тестовые данные")
-        sys.exit(1)
+    # Инициализация базы знаний (пустая, данные — через админку)
+    init_knowledge_base_step()
     
     print("\n" + "=" * 50)
     print("🎉 Настройка завершена успешно!")

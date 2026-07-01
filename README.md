@@ -17,8 +17,8 @@
 ## Быстрый старт
 
 ```bash
-git clone https://github.com/mxdshvch/whatsapp-ai-chatbot.git
-cd whatsapp-ai-chatbot
+git clone https://github.com/mxdshvch/Whatsapp-AI-Bot.git
+cd Whatsapp-AI-Bot
 
 python3 -m venv venv
 source venv/bin/activate

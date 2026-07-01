@@ -34,6 +34,15 @@ class Settings(BaseSettings):
     work_end_hour: int = 19
     timezone: str = "Europe/Moscow"
 
+    # Сообщения (настраиваются через .env)
+    initial_message: str = (
+        "Здравствуйте! Напишите ваш вопрос — мы ответим в ближайшее время."
+    )
+    ai_system_prompt: str = (
+        "Ты — вежливый ассистент. Отвечай кратко и по делу. "
+        "Если не знаешь ответ — предложи связаться с оператором."
+    )
+
     class Config:
         env_file = ".env"
 

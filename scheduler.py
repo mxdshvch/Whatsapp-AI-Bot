@@ -17,11 +17,7 @@ logger = logging.getLogger(__name__)
 class MessageScheduler:
     def __init__(self):
         self.scheduler = AsyncIOScheduler()
-        self.initial_message = (
-            "Привет! Мы команда программистов, занимаемся автоматизацией "
-            "бизнес-процессов и продажами в бизнесе. Наша работа основывается "
-            "на чат-ботах с ИИ. Хотели бы сотрудничать с Вами?"
-        )
+        self.initial_message = settings.initial_message
         
     def start(self):
         """Запустить планировщик"""

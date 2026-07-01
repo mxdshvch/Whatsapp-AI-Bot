@@ -215,15 +215,10 @@
 <script>
 // Показать данные лога
 function showLogData(logId) {
-    // Здесь можно добавить AJAX запрос для получения данных лога
-    const sampleData = {
-        "contact_id": 123,
-        "phone_number": "+79123456789",
-        "message": "Привет! Интересует автоматизация",
-        "ai_response": "Здравствуйте! Мы занимаемся автоматизацией бизнес-процессов..."
-    };
-    
-    document.getElementById('logDataContent').textContent = JSON.stringify(sampleData, null, 2);
+    document.getElementById('logDataContent').textContent = JSON.stringify(
+        { log_id: logId, note: "Данные загружаются из API (в разработке)" },
+        null, 2
+    );
     
     const modal = new bootstrap.Modal(document.getElementById('logDataModal'));
     modal.show();
